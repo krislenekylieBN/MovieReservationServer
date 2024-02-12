@@ -1,5 +1,3 @@
-// movieController.js
-
 const express = require('express');
 const router = express.Router();
 const Movie = require('../models/movie.model');
@@ -11,9 +9,10 @@ router.post('/addMovie', async (req, res) => {
             mov_ID: req.body.mov_ID,
             cin_ID: req.body.cin_ID,
             title: req.body.title,
-            desc: req.body.desc,
+            // desc: req.body.desc,
             price: req.body.price,
             airing_time: req.body.airing_time,
+            image: req.body.image,
         });
         res.json({ status: 'ok', movie });
     } catch (err) {
