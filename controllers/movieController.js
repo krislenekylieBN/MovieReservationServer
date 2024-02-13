@@ -2,6 +2,10 @@ const express = require('express');
 const router = express.Router();
 const Movie = require('../models/movie.model');
 
+//getMovie
+// router.get('/getMovie', async (req))
+
+//addMovie
 router.post('/addMovie', async (req, res) => {
     console.log(req.body);
     try {
