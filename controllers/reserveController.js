@@ -2,29 +2,49 @@ const express = require('express');
 const router = express.Router();
 const Reservation = require('../models/reserve.model');
 const mongoose = require('mongoose');
+const Movie = require('../models/movie.model');
 // const Movie = require('../models/movie.model');
 
 // get all reservations
 router.get('/get-all-reservations', async (req, res) => {
     try {
-      const reservation = await Reservation.find({
-            is_cancelled: false }).sort({ createdAt: -1 })
-                                    .populate('mov_ID');
-            res.send({
-                success: true,
-                message: "Reservation fetched successfully",
-                data: reservation,
-              });
+        const reservations = await Reservation.find({ is_cancelled: false })
+            .sort({ createdAt: -1 })
+            .populate('mov_ID');
+
+        const filteredAiringTimes = reservations.map(reservation => {
+            const matchingAiringTime = reservation.mov_ID.airing_time.find(airingTime => airingTime._id.equals(reservation.airing_time));
+            if (matchingAiringTime) {
+                return {
+                    id: reservation._id,
+                    start_time: matchingAiringTime.start_time,
+                    title: reservation.mov_ID.title,
+                    seat: reservation.seat,
+                    senior_citizen: reservation.senior_citizen,
+                    total_price: reservation.total_price,
+                    is_cancelled: reservation.is_cancelled
+                };
+            }
+            return null; // If no matching airing time is found
+        }).filter(Boolean); // Remove null entries
+
+        res.send({
+            success: true,
+            message: "Airing times fetched successfully",
+            data: filteredAiringTimes,
+        });
     } catch (error) {
-      res.send({
-        success: false,
-        message: error.message,
-      });
+        res.send({
+            success: false,
+            message: error.message,
+        });
     }
-  });
+});
+
+
 
 //get reserve
-router.get('/get-seat/:id', async (req, res) => {
+router.get('/get-reserve/:id', async (req, res) => {
     console.log(req.body);
     try {
         const reservation = await Reservation.findById(req.params.id);
@@ -92,17 +112,16 @@ router.post('/update-reservation/:id', async (req, res) => {
 router.post('/add-reservation', async (req, res) => {
     console.log(req.body);
     try {
-        const { mov_ID, airing_time, seat, discount, total_price, is_cancelled } = req.body;
+        const { mov_ID, airing_time, seat, discount, total_price, is_cancelled, senior_citizen } = req.body;
 
-        const isValidObjectId = mongoose.Types.ObjectId.isValid(mov_ID);         // Ensure correct data types //F: pass the mov_ID(objectID)
+        const isValidObjectId = mongoose.Types.ObjectId.isValid(mov_ID);         // Ensure correct data types 
         if (!isValidObjectId) {
             return res.status(400).json({ status: 'error', error: 'Invalid mov_ID' });
         }
 
         // Validate airing_time if needed
-        //F: pass the airing_time (objectID)
 
-        if (!Array.isArray(seat) || seat.some(item => typeof item !== 'object')) {         // Validate seat data    //F: if exists = not clickable color=red, else clickable color
+        if (!Array.isArray(seat) || seat.some(item => typeof item !== 'object')) {         // Validate seat data   
             return res.status(400).json({ status: 'error', error: 'Invalid seat data' });
         }
 
@@ -112,7 +131,8 @@ router.post('/add-reservation', async (req, res) => {
             seat,
             discount,
             total_price,
-            is_cancelled
+            is_cancelled: false,
+            senior_citizen
         });
         res.json({ status: 'ok', reservation });
     } catch (err) {

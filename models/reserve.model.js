@@ -12,13 +12,10 @@ const reservationSchema = new mongoose.Schema({
     },
     airing_time: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Movie.airing_time' // Reference to the airing_time subdocument within the Movie model
+        ref: 'Movie' // Reference to the airing_time subdocument within the Movie model
     },
     seat: [seatSchema],
-    discount: {
-        senior_citizen: Boolean,
-        pwd: Boolean
-    },
+    senior_citizen: Number,
     total_price: Number,
     is_cancelled: Boolean
 });
